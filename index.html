@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Remote Control</title>
+    <!-- Подключаем Telegram Web App JS, если планируете открыть как Mini App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --card-bg: #181c24;
+            --accent: #4f46e5;
+            --accent-hover: #4338ca;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --text: #f3f4f6;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+        .btn-primary:active { background-color: var(--accent-hover); }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        .btn-danger:active { background-color: var(--danger-hover); }
+
+        .status-box {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .status-value {
+            color: var(--text);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>💻 Управление ПК</h2>
+
+    <div class="container">
+        <!-- Блок системной информации -->
+        <div class="card status-box" id="statusCard">
+            Нажмите кнопку ниже, чтобы запросить статус системы через бота.
+        </div>
+
+        <!-- Кнопки управления -->
+        <div class="card" style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn btn-primary" onclick="sendCommand('screenshot')">📸 Сделать скриншот</button>
+            <button class="btn btn-primary" onclick="sendCommand('status')">📊 Обновить статус</button>
+            <button class="btn btn-primary" onclick="sendCommand('lock')">🔒 Заблокировать ПК</button>
+            <button class="btn btn-danger" onclick="sendCommand('shutdown')">⏻ Выключить ПК</button>
+            <button class="btn btn-primary" style="background-color: #374151;" onclick="sendCommand('cancel_shutdown')">🛑 Отменить выключение</button>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp API
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем на весь экран в Telegram
+
+        function sendCommand(action) {
+            // Если открыто внутри Telegram, отправляем данные боту через WebApp SDK
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                tg.sendData(JSON.stringify({ command: action }));
+                tg.close(); // Закрываем мини-приложение после отправки
+            } else {
+                // Если открыто в обычном браузере, можно выводить уведомление
+                alert("Команда '" + action + "' отправлена (требуется запуск через Telegram Mini App)");
+            }
+        }
+    </script>
+</body>
+</html>
