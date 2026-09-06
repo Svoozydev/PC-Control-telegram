@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PC Remote Control</title>
+    <!-- Официальная библиотека Telegram Web App -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -25,7 +26,7 @@
             flex-direction: column;
             align-items: center;
         }
-        h2 { margin-bottom: 10px; font-size: 20px; }
+        h2 { margin-bottom: 15px; font-size: 20px; }
         .container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
         .card {
             background-color: var(--card);
@@ -34,14 +35,9 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
-        .stat-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 10px; }
-        .stat-val { font-size: 16px; font-weight: bold; color: var(--accent); }
-        .stat-lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
-
         .grid-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .btn {
-            padding: 12px;
+            padding: 14px;
             border: none;
             border-radius: 12px;
             font-size: 14px;
@@ -55,13 +51,6 @@
         .btn-danger { background-color: var(--danger); }
         .btn-full { grid-column: span 2; }
 
-        #screenPreview {
-            width: 100%;
-            border-radius: 10px;
-            display: none;
-            margin-top: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
         #toast {
             position: fixed; bottom: 20px; background: #1f2937; color: white;
             padding: 10px 20px; border-radius: 20px; font-size: 13px;
@@ -74,83 +63,44 @@
     <h2>💻 Управление ПК</h2>
 
     <div class="container">
-        <!-- Блок метрик -->
-        <div class="card">
-            <div class="stats-grid">
-                <div class="stat-item"><div class="stat-val" id="cpuVal">--%</div><div class="stat-lbl">CPU</div></div>
-                <div class="stat-item"><div class="stat-val" id="ramVal">--%</div><div class="stat-lbl">RAM</div></div>
-                <div class="stat-item"><div class="stat-val" id="diskVal">--%</div><div class="stat-lbl">Диск</div></div>
-            </div>
-        </div>
-
-        <!-- Кнопки управления -->
         <div class="card">
             <div class="grid-buttons">
                 <button class="btn btn-full" onclick="sendAction('screenshot')">📸 Сделать скриншот</button>
+                <button class="btn btn-full" onclick="sendAction('status')">📊 Статус ПК</button>
                 <button class="btn" onclick="sendAction('media_play')">🎵 Play / Pause</button>
                 <button class="btn" onclick="sendAction('volume_mute')">🔇 Звук Mute</button>
-                <button class="btn" onclick="sendAction('open_browser')">🌐 Браузер</button>
+                <button class="btn" onclick="sendAction('open_youtube')">▶️ YouTube</Link>
                 <button class="btn" onclick="sendAction('empty_recycle')">🗑 Корзина</button>
                 <button class="btn" onclick="sendAction('lock')">🔒 Блокировать</button>
                 <button class="btn btn-danger" onclick="sendAction('shutdown')">⏻ Выключить</button>
             </div>
-            <img id="screenPreview" alt="Скриншот экрана">
         </div>
     </div>
 
-    <div id="toast">Действие выполнено</div>
+    <div id="toast">Команда отправлена!</div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Сюда пропишите ваш публичный HTTPS адрес (например, от ngrok) или IP локальной сети
-        const API_URL = "ТУДА_ВСТАВЬТЕ_ССЫЛКУ_NGROK_ИЛИ_IP";
+        tg.expand(); // Разворачиваем на весь экран
 
         function showToast(text) {
             let t = document.getElementById('toast');
             t.innerText = text;
             t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2500);
+            setTimeout(() => t.style.display = 'none', 2000);
         }
 
-        async function updateStatus() {
-            try {
-                let res = await fetch(`${API_URL}/api/status`);
-                let data = await res.json();
-                document.getElementById('cpuVal').innerText = data.cpu + '%';
-                document.getElementById('ramVal').innerText = data.memory + '%';
-                document.getElementById('diskVal').innerText = data.disk + '%';
-            } catch (e) {
-                console.error("Нет связи с ПК");
+        function sendAction(action) {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                // Безопасно отправляем данные боту без всяких серверов и ngrok
+                tg.sendData(JSON.stringify({ action: action }));
+                showToast("Команда отправлена боту!");
+            } else {
+                // Если открыто в обычном браузере для теста
+                showToast("Тестовый режим (вне Telegram)");
+                console.log("Action:", action);
             }
         }
-
-        async function sendAction(action) {
-            if (action === 'screenshot') {
-                showToast("Загружаем скриншот...");
-                let img = document.getElementById('screenPreview');
-                img.src = `${API_URL}/api/screenshot?t=` + new Date().getTime();
-                img.style.display = 'block';
-                showToast("Скриншот готов!");
-                return;
-            }
-
-            try {
-                let res = await fetch(`${API_URL}/api/action`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: action })
-                });
-                let data = await res.json();
-                showToast(data.message);
-            } catch (e) {
-                showToast("Ошибка отправки команды!");
-            }
-        }
-
-        updateStatus();
-        setInterval(updateStatus, 3000);
     </script>
 </body>
 </html>
