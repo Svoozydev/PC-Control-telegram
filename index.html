@@ -83,6 +83,8 @@
         let tg = window.Telegram.WebApp;
         tg.expand(); // Разворачиваем на весь экран
 
+        const API_URL = "http://192.168.1.15:5000";
+
         function showToast(text) {
             let t = document.getElementById('toast');
             t.innerText = text;
